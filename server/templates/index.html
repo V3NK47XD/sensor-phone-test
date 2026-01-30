@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket QR Connect</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #placeholder {
+            display: none;
+            font-size: 24px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Scan to Connect 📱</h1>
+
+<div id="qr-box">
+    <p><b>WebSocket URL:</b></p>
+    <p>{{ ws_url }}</p>
+    <img src="data:image/png;base64,{{ qr_code }}" />
+</div>
+
+<div id="placeholder">
+    ✅ External device connected  
+    <br><br>
+    (placeholder UI)
+</div>
+
+<script>
+    const ws = new WebSocket("{{ ws_url }}");
+
+    ws.onmessage = (event) => {
+        console.log("WS:", event.data);
+
+        if (event.data === "external connection") {
+            document.getElementById("qr-box").style.display = "none";
+            document.getElementById("placeholder").style.display = "block";
+        }
+    };
+</script>
+
+</body>
+</html>
