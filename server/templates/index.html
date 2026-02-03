@@ -2,19 +2,48 @@
 <html>
 <head>
     <title>WebSocket QR Connect</title>
+
     <style>
         body {
             font-family: Arial;
             text-align: center;
-            margin-top: 50px;
+            margin-top: 30px;
+            background: #111;
+            color: #fff;
         }
+
         #placeholder {
             display: none;
-            font-size: 24px;
-            color: green;
+            margin-top: 20px;
+            color: lightgreen;
+        }
+
+        #values {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        #game {
+            width: 600px;
+            height: 400px;
+            border: 3px solid #00ff88;
+            margin: 0 auto;
+            position: relative;
+            background: #222;
+        }
+
+        #ball {
+            width: 24px;
+            height: 24px;
+            background: lime;
+            border-radius: 50%;
+            position: absolute;
+            left: 288px;
+            top: 188px;
         }
     </style>
 </head>
+
 <body>
 
 <h1>Scan to Connect 📱</h1>
@@ -26,13 +55,24 @@
 </div>
 
 <div id="placeholder">
-    ✅ External device connected  
-    <br><br>
-    (placeholder UI)
+    <div id="values">
+        X: <span id="xVal">0</span> 
+Y: <span id="yVal">0</span>
+Z: <span id="zVal">0</span>
+
+    </div>
+
+    <div id="game">
+        <div id="ball"></div>
+    </div>
 </div>
 
 <script>
     const ws = new WebSocket("{{ ws_url }}");
+
+    // center of big canvas
+    let posX = 288;
+    let posY = 188;
 
     ws.onmessage = (event) => {
         console.log("WS:", event.data);
@@ -40,6 +80,33 @@
         if (event.data === "external connection") {
             document.getElementById("qr-box").style.display = "none";
             document.getElementById("placeholder").style.display = "block";
+            return;
+        }
+
+        try {
+            const data = JSON.parse(event.data);
+
+            const ax = data.live.x;
+            const ay = data.live.y; // X axis
+            const az = data.live.z; // Y axis (inverted)
+
+            document.getElementById("xVal").innerText = ax.toFixed(2);
+            document.getElementById("yVal").innerText = ay.toFixed(2);
+            document.getElementById("zVal").innerText = az.toFixed(2);
+
+            const sensitivity = 2;
+
+            posY += ax * sensitivity;
+            posX -= ay * sensitivity; // 🔁 INVERTED Y AXIS
+
+            posX = Math.max(0, Math.min(576, posX));
+            posY = Math.max(0, Math.min(376, posY));
+
+            document.getElementById("ball").style.left = posX + "px";
+            document.getElementById("ball").style.top = posY + "px";
+
+        } catch (e) {
+            // ignore non-JSON messages
         }
     };
 </script>
